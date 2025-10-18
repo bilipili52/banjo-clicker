@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Банджо-кликер</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+            color: #fff;
+            min-height: 100vh;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 400px 1fr 350px;
+            gap: 20px;
+            align-items: start;
+        }
+        
+        header {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            color: #FFD700;
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            font-size: 1.2rem;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .left-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            position: sticky;
+            top: 20px;
+        }
+        
+        .banjo-section {
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .banjo {
+            width: 250px;
+            height: 250px;
+            margin: 20px auto;
+            cursor: pointer;
+            transition: transform 0.1s;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="%23d2691e" stroke="%238B4513" stroke-width="2"/><circle cx="50" cy="50" r="30" fill="%23f5deb3" stroke="%238B4513" stroke-width="1"/><rect x="45" y="10" width="10" height="80" fill="%238B4513"/><circle cx="50" cy="20" r="8" fill="%23d2691e"/><circle cx="50" cy="80" r="8" fill="%23d2691e"/><line x1="30" y1="35" x2="70" y2="35" stroke="%23000" stroke-width="0.5"/><line x1="30" y1="45" x2="70" y2="45" stroke="%23000" stroke-width="0.5"/><line x1="30" y1="55" x2="70" y2="55" stroke="%23000" stroke-width="0.5"/><line x1="30" y1="65" x2="70" y2="65" stroke="%23000" stroke-width="0.5"/></svg>') no-repeat center;
+            background-size: contain;
+        }
+        
+        .banjo:active {
+            transform: scale(0.95);
+        }
+        
+        .click-power {
+            font-size: 1.5rem;
+            margin-top: 10px;
+            color: #FFD700;
+        }
+        
+        .upgrades-section {
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .buildings-section {
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            max-height: 800px;
+            overflow-y: auto;
+        }
+        
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            position: sticky;
+            top: 20px;
+        }
+        
+        .achievements-section {
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            max-height: 600px;
+            overflow-y: auto;
+        }
+        
+        h2 {
+            color: #FFD700;
+            margin-bottom: 15px;
+            text-align: center;
+            border-bottom: 2px solid #FFD700;
+            padding-bottom: 10px;
+            position: sticky;
+            top: 0;
+            background: rgba(0, 0, 0, 0.4);
+            z-index: 10;
+        }
+        
+        .upgrade, .building, .achievement {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.3s;
+            font-size: 0.9rem;
+        }
+        
+        .upgrade:hover, .building:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .upgrade-info, .building-info {
+            flex: 1;
+        }
+        
+        .upgrade-name, .building-name {
+            font-weight: bold;
+            font-size: 1rem;
+        }
+        
+        .upgrade-desc, .building-desc {
+            font-size: 0.8rem;
+            color: #ccc;
+        }
+        
+        .upgrade-cost, .building-cost {
+            font-weight: bold;
+            color: #FFD700;
+            margin-right: 8px;
+            font-size: 0.9rem;
+            text-align: right;
+            min-width: 120px;
+        }
+        
+        button {
+            background: #FFD700;
+            color: #333;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.3s;
+            white-space: nowrap;
+            font-size: 0.8rem;
+        }
+        
+        button:hover:not(:disabled) {
+            background: #ffed4a;
+        }
+        
+        button:disabled {
+            background: #666;
+            cursor: not-allowed;
+        }
+        
+        .achievement {
+            opacity: 0.5;
+        }
+        
+        .achievement.unlocked {
+            opacity: 1;
+            background: rgba(255, 215, 0, 0.2);
+        }
+        
+        .achievement-icon {
+            font-size: 1.5rem;
+            margin-right: 10px;
+        }
+        
+        .achievement-info {
+            flex: 1;
+        }
+        
+        .achievement-name {
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+        
+        .achievement-desc {
+            font-size: 0.8rem;
+            color: #ccc;
+        }
+        
+        .golden-banjo {
+            animation: goldenGlow 2s infinite alternate;
+        }
+        
+        @keyframes goldenGlow {
+            from { filter: drop-shadow(0 0 5px rgba(255, 215, 0, 0.5)); }
+            to { filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.9)); }
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            color: #FFD700;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            transform: translateX(150%);
+            transition: transform 0.5s;
+            z-index: 1000;
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+        }
+        
+        .cost-affordable {
+            color: #7CFC00;
+        }
+        
+        .cost-expensive {
+            color: #FF4500;
+        }
+        
+        .reset-btn {
+            background: #ff4500;
+            margin-top: 10px;
+            padding: 8px 16px;
+            font-size: 0.9rem;
+        }
+        
+        .reset-btn:hover {
+            background: #ff6347;
+        }
+        
+        .category {
+            margin-bottom: 20px;
+        }
+        
+        .category-title {
+            color: #FFD700;
+            font-size: 1.2rem;
+            margin: 15px 0 10px 0;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #FFD700;
+            background: rgba(0, 0, 0, 0.4);
+            position: sticky;
+            top: 0;
+            z-index: 5;
+        }
+        
+        @media (max-width: 1200px) {
+            .container {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            
+            .left-panel, .sidebar {
+                position: static;
+            }
+            
+            .main-content {
+                order: 3;
+            }
+            
+            .left-panel {
+                order: 2;
+            }
+            
+            .sidebar {
+                order: 4;
+            }
+        }
+        
+        /* Стили для скроллбара */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #FFD700;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #ffed4a;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Банджо-кликер</h1>
+            <div class="stats">
+                <div class="current-banjos">Банджо: <span id="currentBanjos">0</span></div>
+                <div class="banjos-per-second">Банджо в секунду: <span id="banjosPerSecond">0</span></div>
+                <div class="click-power">Сила клика: <span id="clickPower">1</span></div>
+            </div>
+            <button class="reset-btn" onclick="resetGame()">Сбросить игру</button>
+        </header>
+        
+        <div class="left-panel">
+            <section class="banjo-section">
+                <div class="banjo" id="banjo"></div>
+                <div class="click-power">Кликай на банджо!</div>
+            </section>
+            
+            <section class="upgrades-section">
+                <h2>Улучшения</h2>
+                <div id="upgradesList">
+                    <!-- Улучшения будут добавляться с помощью JS -->
+                </div>
+            </section>
+        </div>
+        
+        <main class="main-content">
+            <section class="buildings-section">
+                <h2>Структуры</h2>
+                <div id="buildingsList">
+                    <!-- Структуры будут добавляться с помощью JS -->
+                </div>
+            </section>
+        </main>
+        
+        <aside class="sidebar">
+            <section class="achievements-section">
+                <h2>Ачивки</h2>
+                <div id="achievementsList">
+                    <!-- Ачивки будут добавляться с помощью JS -->
+                </div>
+            </section>
+        </aside>
+    </div>
+    
+    <div class="notification" id="notification">
+        <div id="notificationText"></div>
+    </div>
+
+    <script>
+        // Игровые данные
+        let game = {
+            banjos: 0,
+            totalBanjos: 0,
+            clickPower: 1,
+            banjosPerSecond: 0,
+            upgrades: [],
+            buildings: [],
+            achievements: [],
+            lastUpdate: Date.now()
+        };
+
+        // Определяем улучшения
+        const upgradesData = [
+            { id: 1, name: "Улучшенные струны", desc: "Увеличивает силу клика на +1", cost: 10, power: 1, type: "click" },
+            { id: 2, name: "Профессиональный банджо", desc: "Увеличивает силу клика на +5", cost: 50, power: 5, type: "click" },
+            { id: 3, name: "Золотые струны", desc: "Увеличивает силу клика на +10", cost: 200, power: 10, type: "click" },
+            { id: 4, name: "Магический банджо", desc: "Увеличивает силу клика на +25", cost: 1000, power: 25, type: "click" },
+            { id: 5, name: "Божественный банджо", desc: "Увеличивает силу клика на +100", cost: 5000, power: 100, type: "click" },
+            { id: 6, name: "Космический банджо", desc: "Увеличивает силу клика на +500", cost: 25000, power: 500, type: "click" },
+            { id: 7, name: "Легендарный банджо", desc: "Увеличивает силу клика на +2000", cost: 100000, power: 2000, type: "click" },
+            { id: 8, name: "Банджо богов", desc: "Увеличивает силу клика на +10000", cost: 500000, power: 10000, type: "click" }
+        ];
+
+        // Определяем структуры (более 50!)
+        const buildingsData = [
+            // Уровень 1: Начальные структуры
+            { id: 1, name: "Банджо-ученик", desc: "Производит 1 банджо в секунду", cost: 15, bps: 1, count: 0, category: "Начальные" },
+            { id: 2, name: "Уличный музыкант", desc: "Производит 5 банджо в секунду", cost: 100, bps: 5, count: 0, category: "Начальные" },
+            { id: 3, name: "Музыкальная школа", desc: "Производит 20 банджо в секунду", cost: 500, bps: 20, count: 0, category: "Начальные" },
+            { id: 4, name: "Концертный зал", desc: "Производит 100 банджо в секунду", cost: 3000, bps: 100, count: 0, category: "Начальные" },
+            
+            // Уровень 2: Профессиональные
+            { id: 5, name: "Банджо-оркестр", desc: "Производит 500 банджо в секунду", cost: 10000, bps: 500, count: 0, category: "Профессиональные" },
+            { id: 6, name: "Банджо-фестиваль", desc: "Производит 2000 банджо в секунду", cost: 50000, bps: 2000, count: 0, category: "Профессиональные" },
+            { id: 7, name: "Банджо-планета", desc: "Производит 10000 банджо в секунду", cost: 250000, bps: 10000, count: 0, category: "Профессиональные" },
+            { id: 8, name: "Банджо-галактика", desc: "Производит 50000 банджо в секунду", cost: 1000000, bps: 50000, count: 0, category: "Профессиональные" },
+            
+            // Уровень 3: Космические
+            { id: 9, name: "Банджо-созвездие", desc: "Производит 200000 банджо в секунду", cost: 5000000, bps: 200000, count: 0, category: "Космические" },
+            { id: 10, name: "Банджо-вселенная", desc: "Производит 1M банджо в секунду", cost: 25000000, bps: 1000000, count: 0, category: "Космические" },
+            { id: 11, name: "Банджо-мультивселенная", desc: "Производит 5M банджо в секунду", cost: 100000000, bps: 5000000, count: 0, category: "Космические" },
+            { id: 12, name: "Банджо-сингулярность", desc: "Производит 25M банджо в секунду", cost: 500000000, bps: 25000000, count: 0, category: "Космические" },
+            
+            // Уровень 4: Божественные
+            { id: 13, name: "Банджо-божество", desc: "Производит 100M банджо в секунду", cost: 2500000000, bps: 100000000, count: 0, category: "Божественные" },
+            { id: 14, name: "Банджо-пантеон", desc: "Производит 500M банджо в секунду", cost: 10000000000, bps: 500000000, count: 0, category: "Божественные" },
+            { id: 15, name: "Банджо-создатель", desc: "Производит 2B банджо в секунду", cost: 50000000000, bps: 2000000000, count: 0, category: "Божественные" },
+            { id: 16, name: "Банджо-абсолют", desc: "Производит 10B банджо в секунду", cost: 250000000000, bps: 10000000000, count: 0, category: "Божественные" },
+            
+            // Уровень 5: Легендарные
+            { id: 17, name: "Банджо-легенда", desc: "Производит 50B банджо в секунду", cost: 1000000000000, bps: 50000000000, count: 0, category: "Легендарные" },
+            { id: 18, name: "Банджо-миф", desc: "Производит 250B банджо в секунду", cost: 5000000000000, bps: 250000000000, count: 0, category: "Легендарные" },
+            { id: 19, name: "Банджо-архетип", desc: "Производит 1T банджо в секунду", cost: 25000000000000, bps: 1000000000000, count: 0, category: "Легендарные" },
+            { id: 20, name: "Банджо-идея", desc: "Производит 5T банджо в секунду", cost: 100000000000000, bps: 5000000000000, count: 0, category: "Легендарные" },
+            
+            // Уровень 6: Абстрактные
+            { id: 21, name: "Банджо-концепт", desc: "Производит 25T банджо в секунду", cost: 500000000000000, bps: 25000000000000, count: 0, category: "Абстрактные" },
+            { id: 22, name: "Банджо-абстракция", desc: "Производит 100T банджо в секунду", cost: 2500000000000000, bps: 100000000000000, count: 0, category: "Абстрактные" },
+            { id: 23, name: "Банджо-форма", desc: "Производит 500T банджо в секунду", cost: 10000000000000000, bps: 500000000000000, count: 0, category: "Абстрактные" },
+            { id: 24, name: "Банджо-сущность", desc: "Производит 2Q банджо в секунду", cost: 50000000000000000, bps: 2000000000000000, count: 0, category: "Абстрактные" },
+            
+            // Уровень 7: Мета-структуры
+            { id: 25, name: "Банджо-мета", desc: "Производит 10Q банджо в секунду", cost: 250000000000000000, bps: 10000000000000000, count: 0, category: "Мета-структуры" },
+            { id: 26, name: "Банджо-гипер", desc: "Производит 50Q банджо в секунду", cost: 1000000000000000000, bps: 50000000000000000, count: 0, category: "Мета-структуры" },
+            { id: 27, name: "Банджо-ультра", desc: "Производит 250Q банджо в секунду", cost: 5000000000000000000, bps: 250000000000000000, count: 0, category: "Мета-структуры" },
+            { id: 28, name: "Банджо-омега", desc: "Производит 1S банджо в секунду", cost: 25000000000000000000, bps: 1000000000000000000, count: 0, category: "Мета-структуры" },
+            
+            // Уровень 8: Финальные
+            { id: 29, name: "Банджо-финал", desc: "Производит 5S банджо в секунду", cost: 100000000000000000000, bps: 5000000000000000000, count: 0, category: "Финальные" },
+            { id: 30, name: "Банджо-эпилог", desc: "Производит 25S банджо в секунду", cost: 500000000000000000000, bps: 25000000000000000000, count: 0, category: "Финальные" },
+            { id: 31, name: "Банджо-вечность", desc: "Производит 100S банджо в секунду", cost: 2500000000000000000000, bps: 100000000000000000000, count: 0, category: "Финальные" },
+            { id: 32, name: "Банджо-нирвана", desc: "Производит 500S банджо в секунду", cost: 10000000000000000000000, bps: 500000000000000000000, count: 0, category: "Финальные" },
+            
+            // Уровень 9: Запредельные
+            { id: 33, name: "Банджо-трансцендент", desc: "Производит 2O банджо в секунду", cost: 50000000000000000000000, bps: 2000000000000000000000, count: 0, category: "Запредельные" },
+            { id: 34, name: "Банджо-бесконечность", desc: "Производит 10O банджо в секунду", cost: 250000000000000000000000, bps: 10000000000000000000000, count: 0, category: "Запредельные" },
+            { id: 35, name: "Банджо-абсолютный ноль", desc: "Производит 50O банджо в секунду", cost: 1000000000000000000000000, bps: 50000000000000000000000, count: 0, category: "Запредельные" },
+            { id: 36, name: "Банджо-сингулярность II", desc: "Производит 250O банджо в секунду", cost: 5000000000000000000000000, bps: 250000000000000000000000, count: 0, category: "Запредельные" },
+            
+            // Уровень 10: Финальные боссы
+            { id: 37, name: "Банджо-босс", desc: "Производит 1N банджо в секунду", cost: 25000000000000000000000000, bps: 1000000000000000000000000, count: 0, category: "Финальные боссы" },
+            { id: 38, name: "Банджо-титан", desc: "Производит 5N банджо в секунду", cost: 100000000000000000000000000, bps: 5000000000000000000000000, count: 0, category: "Финальные боссы" },
+            { id: 39, name: "Банджо-колосс", desc: "Производит 25N банджо в секунду", cost: 500000000000000000000000000, bps: 25000000000000000000000000, count: 0, category: "Финальные боссы" },
+            { id: 40, name: "Банджо-левиафан", desc: "Производит 100N банджо в секунду", cost: 2500000000000000000000000000, bps: 100000000000000000000000000, count: 0, category: "Финальные боссы" },
+            
+            // Уровень 11: Божественные создания
+            { id: 41, name: "Банджо-демиург", desc: "Производит 500N банджо в секунду", cost: 10000000000000000000000000000, bps: 500000000000000000000000000, count: 0, category: "Божественные создания" },
+            { id: 42, name: "Банджо-творец", desc: "Производит 2.5e33 банджо в секунду", cost: 50000000000000000000000000000, bps: 2500000000000000000000000000, count: 0, category: "Божественные создания" },
+            { id: 43, name: "Банджо-вседержитель", desc: "Производит 1.25e34 банджо в секунду", cost: 250000000000000000000000000000, bps: 12500000000000000000000000000, count: 0, category: "Божественные создания" },
+            { id: 44, name: "Банджо-первопричина", desc: "Производит 6.25e34 банджо в секунду", cost: 1000000000000000000000000000000, bps: 62500000000000000000000000000, count: 0, category: "Божественные создания" },
+            
+            // Уровень 12: Абсолютные вершины
+            { id: 45, name: "Банджо-вершина", desc: "Производит 3.125e35 банджо в секунду", cost: 5000000000000000000000000000000, bps: 312500000000000000000000000000, count: 0, category: "Абсолютные вершины" },
+            { id: 46, name: "Банджо-пик", desc: "Производит 1.5625e36 банджо в секунду", cost: 25000000000000000000000000000000, bps: 1562500000000000000000000000000, count: 0, category: "Абсолютные вершины" },
+            { id: 47, name: "Банджо-апогей", desc: "Производит 7.8125e36 банджо в секунду", cost: 100000000000000000000000000000000, bps: 7812500000000000000000000000000, count: 0, category: "Абсолютные вершины" },
+            { id: 48, name: "Банджо-зинит", desc: "Производит 3.90625e37 банджо в секунду", cost: 500000000000000000000000000000000, bps: 39062500000000000000000000000000, count: 0, category: "Абсолютные вершины" },
+            
+            // Уровень 13: Финальные достижения
+            { id: 49, name: "Банджо-совершенство", desc: "Производит 1.953125e38 банджо в секунду", cost: 2500000000000000000000000000000000, bps: 195312500000000000000000000000000, count: 0, category: "Финальные достижения" },
+            { id: 50, name: "Банджо-идеал", desc: "Производит 9.765625e38 банджо в секунду", cost: 10000000000000000000000000000000000, bps: 976562500000000000000000000000000, count: 0, category: "Финальные достижения" },
+            { id: 51, name: "Банджо-утопия", desc: "Производит 4.8828125e39 банджо в секунду", cost: 50000000000000000000000000000000000, bps: 4882812500000000000000000000000000, count: 0, category: "Финальные достижения" },
+            { id: 52, name: "БАНДЖО-БОГ", desc: "Производит 2.44140625e40 банджо в секунду", cost: 250000000000000000000000000000000000, bps: 24414062500000000000000000000000000, count: 0, category: "Финальные достижения" }
+        ];
+
+        // Определяем ачивки
+        const achievementsData = [
+            { id: 1, name: "Первое банджо", desc: "Собрать 1 банджо", icon: "🎵", condition: (game) => game.totalBanjos >= 1 },
+            { id: 2, name: "Начинающий музыкант", desc: "Собрать 50 банджо", icon: "🎸", condition: (game) => game.totalBanjos >= 50 },
+            { id: 3, name: "Опытный банджист", desc: "Собрать 500 банджо", icon: "🎶", condition: (game) => game.totalBanjos >= 500 },
+            { id: 4, name: "Мастер банджо", desc: "Собрать 5000 банджо", icon: "🏆", condition: (game) => game.totalBanjos >= 5000 },
+            { id: 5, name: "Легенда банджо", desc: "Собрать 50000 банджо", icon: "👑", condition: (game) => game.totalBanjos >= 50000 },
+            { id: 6, name: "Первое улучшение", desc: "Купить первое улучшение", icon: "⭐", condition: (game) => game.upgrades.some(u => u.purchased) },
+            { id: 7, name: "Первая структура", desc: "Купить первую структуру", icon: "🏛️", condition: (game) => game.buildings.some(b => b.count > 0) },
+            { id: 8, name: "Банджо-миллионер", desc: "Собрать 1,000,000 банджо", icon: "💎", condition: (game) => game.totalBanjos >= 1000000 },
+            { id: 9, name: "Банджо-миллиардер", desc: "Собрать 1,000,000,000 банджо", icon: "💰", condition: (game) => game.totalBanjos >= 1000000000 },
+            { id: 10, name: "Банджо-триллионер", desc: "Собрать 1,000,000,000,000 банджо", icon: "💸", condition: (game) => game.totalBanjos >= 1000000000000 },
+            { id: 11, name: "Властелин банджо", desc: "Собрать 1e18 банджо", icon: "🎯", condition: (game) => game.totalBanjos >= 1e18 },
+            { id: 12, name: "БОГ БАНДЖО", desc: "Собрать 1e40 банджо", icon: "🌌", condition: (game) => game.totalBanjos >= 1e40 }
+        ];
+
+        // Форматирование больших чисел
+        function formatNumber(num) {
+            if (num < 1000) return Math.floor(num).toString();
+            if (num < 1000000) return (num / 1000).toFixed(1) + 'K';
+            if (num < 1000000000) return (num / 1000000).toFixed(1) + 'M';
+            if (num < 1000000000000) return (num / 1000000000).toFixed(1) + 'B';
+            if (num < 1000000000000000) return (num / 1000000000000).toFixed(1) + 'T';
+            if (num < 1e18) return (num / 1e15).toFixed(1) + 'Q';
+            if (num < 1e21) return (num / 1e18).toFixed(1) + 'S';
+            if (num < 1e24) return (num / 1e21).toFixed(1) + 'O';
+            if (num < 1e27) return (num / 1e24).toFixed(1) + 'N';
+            return num.toExponential(2);
+        }
+
+        // Инициализация игры
+        function initGame() {
+            // Загружаем сохраненную игру, если есть
+            const savedGame = localStorage.getItem('banjoClicker');
+            if (savedGame) {
+                try {
+                    const parsed = JSON.parse(savedGame);
+                    
+                    // Восстанавливаем основные данные
+                    game.banjos = parsed.banjos || 0;
+                    game.totalBanjos = parsed.totalBanjos || 0;
+                    game.clickPower = parsed.clickPower || 1;
+                    game.banjosPerSecond = parsed.banjosPerSecond || 0;
+                    game.lastUpdate = parsed.lastUpdate || Date.now();
+                    
+                    // Восстанавливаем улучшения
+                    if (parsed.upgrades && parsed.upgrades.length > 0) {
+                        game.upgrades = parsed.upgrades;
+                    } else {
+                        game.upgrades = upgradesData.map(upgrade => ({ ...upgrade, purchased: false }));
+                    }
+                    
+                    // Восстанавливаем структуры
+                    if (parsed.buildings && parsed.buildings.length > 0) {
+                        game.buildings = parsed.buildings;
+                    } else {
+                        game.buildings = buildingsData.map(building => ({ ...building, count: 0 }));
+                    }
+                    
+                    // Восстанавливаем ачивки
+                    if (parsed.achievements && parsed.achievements.length > 0) {
+                        game.achievements = parsed.achievements;
+                    } else {
+                        game.achievements = achievementsData.map(achievement => ({ ...achievement, unlocked: false }));
+                    }
+                    
+                } catch (e) {
+                    console.error("Ошибка загрузки игры:", e);
+                    initNewGame();
+                }
+            } else {
+                initNewGame();
+            }
+            
+            // Рассчитываем оффлайн-доход
+            calculateOfflineEarnings();
+            
+            updateDisplay();
+            renderUpgrades();
+            renderBuildings();
+            renderAchievements();
+            
+            // Запускаем игровой цикл
+            setInterval(gameLoop, 1000);
+            
+            // Сохраняем игру каждые 10 секунд
+            setInterval(saveGame, 10000);
+        }
+
+        // Инициализация новой игры
+        function initNewGame() {
+            game = {
+                banjos: 0,
+                totalBanjos: 0,
+                clickPower: 1,
+                banjosPerSecond: 0,
+                upgrades: upgradesData.map(upgrade => ({ ...upgrade, purchased: false })),
+                buildings: buildingsData.map(building => ({ ...building, count: 0 })),
+                achievements: achievementsData.map(achievement => ({ ...achievement, unlocked: false })),
+                lastUpdate: Date.now()
+            };
+        }
+
+        // Расчет оффлайн-дохода
+        function calculateOfflineEarnings() {
+            const now = Date.now();
+            const offlineTime = (now - game.lastUpdate) / 1000;
+            
+            if (offlineTime > 5) {
+                let bps = 0;
+                game.buildings.forEach(building => {
+                    bps += building.bps * building.count;
+                });
+                
+                const offlineEarnings = Math.floor(bps * offlineTime);
+                if (offlineEarnings > 0) {
+                    game.banjos += offlineEarnings;
+                    game.totalBanjos += offlineEarnings;
+                    showNotification(`Оффлайн доход: ${formatNumber(offlineEarnings)} банджо!`);
+                }
+            }
+            
+            game.lastUpdate = now;
+        }
+
+        // Игровой цикл
+        function gameLoop() {
+            let bps = 0;
+            game.buildings.forEach(building => {
+                bps += building.bps * building.count;
+            });
+            
+            game.banjos += bps;
+            game.totalBanjos += bps;
+            game.banjosPerSecond = bps;
+            
+            checkAchievements();
+            
+            updateDisplay();
+            renderUpgrades();
+            renderBuildings();
+            
+            game.lastUpdate = Date.now();
+        }
+
+        // Обработчик клика по банджо
+        document.getElementById('banjo').addEventListener('click', () => {
+            game.banjos += game.clickPower;
+            game.totalBanjos += game.clickPower;
+            updateDisplay();
+            
+            const banjo = document.getElementById('banjo');
+            banjo.classList.add('golden-banjo');
+            setTimeout(() => {
+                banjo.classList.remove('golden-banjo');
+            }, 100);
+            
+            checkAchievements();
+        });
+
+        // Покупка улучшения
+        function buyUpgrade(id) {
+            const upgrade = game.upgrades.find(u => u.id === id);
+            
+            if (!upgrade.purchased && game.banjos >= upgrade.cost) {
+                game.banjos -= upgrade.cost;
+                upgrade.purchased = true;
+                
+                if (upgrade.type === 'click') {
+                    game.clickPower += upgrade.power;
+                }
+                
+                showNotification(`Куплено улучшение: ${upgrade.name}`);
+                updateDisplay();
+                renderUpgrades();
+                saveGame();
+            }
+        }
+
+        // Покупка структуры
+        function buyBuilding(id) {
+            const building = game.buildings.find(b => b.id === id);
+            
+            if (game.banjos >= building.cost) {
+                game.banjos -= building.cost;
+                building.count++;
+                building.cost = Math.floor(building.cost * 1.15);
+                
+                showNotification(`Куплена структура: ${building.name}`);
+                updateDisplay();
+                renderBuildings();
+                saveGame();
+            }
+        }
+
+        // Проверка ачивок
+        function checkAchievements() {
+            let newAchievements = false;
+            
+            game.achievements.forEach(achievement => {
+                if (!achievement.unlocked && achievement.condition(game)) {
+                    achievement.unlocked = true;
+                    showNotification(`Получена ачивка: ${achievement.name}`, true);
+                    newAchievements = true;
+                }
+            });
+            
+            if (newAchievements) {
+                renderAchievements();
+                saveGame();
+            }
+        }
+
+        // Отображение улучшений
+        function renderUpgrades() {
+            const upgradesList = document.getElementById('upgradesList');
+            upgradesList.innerHTML = '';
+            
+            game.upgrades.forEach(upgrade => {
+                const upgradeElement = document.createElement('div');
+                upgradeElement.className = 'upgrade';
+                
+                const canAfford = game.banjos >= upgrade.cost;
+                const costClass = canAfford && !upgrade.purchased ? 'cost-affordable' : 'cost-expensive';
+                
+                upgradeElement.innerHTML = `
+                    <div class="upgrade-info">
+                        <div class="upgrade-name">${upgrade.name}</div>
+                        <div class="upgrade-desc">${upgrade.desc}</div>
+                    </div>
+                    <div class="upgrade-cost ${costClass}">${formatNumber(upgrade.cost)} банджо</div>
+                    <button ${upgrade.purchased || !canAfford ? 'disabled' : ''} 
+                            onclick="buyUpgrade(${upgrade.id})">
+                        ${upgrade.purchased ? 'Куплено' : 'Купить'}
+                    </button>
+                `;
+                
+                upgradesList.appendChild(upgradeElement);
+            });
+        }
+
+        // Отображение структур
+        function renderBuildings() {
+            const buildingsList = document.getElementById('buildingsList');
+            buildingsList.innerHTML = '';
+            
+            // Группируем по категориям
+            const categories = {};
+            game.buildings.forEach(building => {
+                if (!categories[building.category]) {
+                    categories[building.category] = [];
+                }
+                categories[building.category].push(building);
+            });
+            
+            // Отображаем по категориям
+            Object.keys(categories).forEach(category => {
+                const categoryElement = document.createElement('div');
+                categoryElement.className = 'category';
+                
+                const categoryTitle = document.createElement('div');
+                categoryTitle.className = 'category-title';
+                categoryTitle.textContent = category;
+                categoryElement.appendChild(categoryTitle);
+                
+                categories[category].forEach(building => {
+                    const buildingElement = document.createElement('div');
+                    buildingElement.className = 'building';
+                    
+                    const canAfford = game.banjos >= building.cost;
+                    const costClass = canAfford ? 'cost-affordable' : 'cost-expensive';
+                    
+                    buildingElement.innerHTML = `
+                        <div class="building-info">
+                            <div class="building-name">${building.name} (${building.count})</div>
+                            <div class="building-desc">${building.desc}</div>
+                        </div>
+                        <div class="building-cost ${costClass}">${formatNumber(building.cost)} банджо</div>
+                        <button ${!canAfford ? 'disabled' : ''} 
+                                onclick="buyBuilding(${building.id})">
+                            Купить
+                        </button>
+                    `;
+                    
+                    categoryElement.appendChild(buildingElement);
+                });
+                
+                buildingsList.appendChild(categoryElement);
+            });
+        }
+
+        // Отображение ачивок
+        function renderAchievements() {
+            const achievementsList = document.getElementById('achievementsList');
+            achievementsList.innerHTML = '';
+            
+            game.achievements.forEach(achievement => {
+                const achievementElement = document.createElement('div');
+                achievementElement.className = `achievement ${achievement.unlocked ? 'unlocked' : ''}`;
+                
+                achievementElement.innerHTML = `
+                    <div class="achievement-icon">${achievement.icon}</div>
+                    <div class="achievement-info">
+                        <div class="achievement-name">${achievement.name}</div>
+                        <div class="achievement-desc">${achievement.desc}</div>
+                    </div>
+                `;
+                
+                achievementsList.appendChild(achievementElement);
+            });
+        }
+
+        // Обновление отображения
+        function updateDisplay() {
+            document.getElementById('currentBanjos').textContent = formatNumber(game.banjos);
+            document.getElementById('banjosPerSecond').textContent = formatNumber(game.banjosPerSecond);
+            document.getElementById('clickPower').textContent = formatNumber(game.clickPower);
+        }
+
+        // Показать уведомление
+        function showNotification(text, isAchievement = false) {
+            const notification = document.getElementById('notification');
+            const notificationText = document.getElementById('notificationText');
+            
+            notificationText.textContent = text;
+            notification.className = 'notification show';
+            
+            if (isAchievement) {
+                notification.style.background = 'rgba(255, 215, 0, 0.2)';
+                notification.style.border = '2px solid #FFD700';
+            } else {
+                notification.style.background = 'rgba(0, 0, 0, 0.8)';
+                notification.style.border = 'none';
+            }
+            
+            setTimeout(() => {
+                notification.className = 'notification';
+            }, 3000);
+        }
+
+        // Сохранение игры
+        function saveGame() {
+            try {
+                localStorage.setItem('banjoClicker', JSON.stringify(game));
+            } catch (e) {
+                console.error("Ошибка сохранения игры:", e);
+            }
+        }
+
+        // Сброс игры
+        function resetGame() {
+            if (confirm("Вы уверены, что хотите сбросить игру? Весь прогресс будет потерян!")) {
+                localStorage.removeItem('banjoClicker');
+                initNewGame();
+                updateDisplay();
+                renderUpgrades();
+                renderBuildings();
+                renderAchievements();
+                showNotification("Игра сброшена!");
+            }
+        }
+
+        // Запуск игры при загрузке страницы
+        window.onload = initGame;
+    </script>
+</body>
+</html>
